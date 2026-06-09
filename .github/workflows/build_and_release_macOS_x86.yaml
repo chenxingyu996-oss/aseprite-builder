@@ -69,12 +69,21 @@ jobs:
         run: |
           git clone --recurse-submodules -j8 https://github.com/aseprite/aseprite --branch ${{ needs.create-release.outputs.release-tag }}
       - name: Install Skia
-        working-directory: aseprite
-        shell: bash
-        run: |
-          wget https://github.com/aseprite/skia/releases/download/m124-08a5439a6b/Skia-macOS-Release-x64.zip
-          unzip Skia-macOS-Release-x64.zip -d skia
-      - uses: aseprite/get-ninja@main
+  working-directory: aseprite
+  shell: pwsh
+  run: |
+    if ($env:RUNNER_OS -eq 'Windows') {
+      # Windows 系统用 PowerShell 下载并解压
+      Invoke-WebRequest `
+        -Uri "https://github.com/aseprite/skia/releases/download/m124-08a5439a6b/Skia-Windows-Release-x64.zip" `
+        -OutFile "Skia-Windows-Release-x64.zip" `
+        -UseBasicParsing
+      Expand-Archive -Path "Skia-Windows-Release-x64.zip" -DestinationPath "skia"
+    } else {
+      # macOS/Linux 系统保持原命令
+      wget https://github.com/aseprite/skia/releases/download/m124-08a5439a6b/Skia-$($env:RUNNER_OS)-Release-x64.zip
+      unzip Skia-$($env:RUNNER_OS)-Release-x64.zip -d skia
+    }
       - name: Generating Makefiles
         shell: bash
         working-directory: aseprite
